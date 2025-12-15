@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { GeneratedAudio } from '../types';
-import { Play, Pause, Download, Trash2, Volume2, Fingerprint } from 'lucide-react';
+import { Play, Pause, Download, Trash2, Volume2, Fingerprint, Globe } from 'lucide-react';
 
 interface HistoryItemProps {
   item: GeneratedAudio;
@@ -76,17 +76,19 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ item, onDelete }) => {
       <div className="flex flex-col gap-3">
         {/* Header info */}
         <div className="flex justify-between items-start pr-6">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className={`text-xs font-bold px-2 py-1 rounded ${item.isCloned ? 'bg-indigo-500/20 text-indigo-200 ring-1 ring-indigo-500/40' : 'bg-slate-700 text-slate-300'}`}>
               {item.voiceName}
             </span>
-            <span className="text-xs text-slate-500">
-              {new Date(item.timestamp).toLocaleTimeString()}
-            </span>
+            {item.language && item.language !== 'Auto' && (
+              <span className="text-xs bg-slate-700/50 text-slate-400 px-1.5 py-0.5 rounded flex items-center gap-1">
+                <Globe size={10} /> {item.language}
+              </span>
+            )}
           </div>
           <button 
             onClick={() => onDelete(item.id)}
-            className="text-slate-500 hover:text-red-400 transition-colors"
+            className="text-slate-500 hover:text-red-400 transition-colors ml-2"
           >
             <Trash2 size={16} />
           </button>

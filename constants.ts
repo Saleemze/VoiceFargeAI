@@ -1,4 +1,4 @@
-import { VoiceOption } from './types';
+import { VoiceOption, LanguageGroup } from './types';
 
 export const AVAILABLE_VOICES: VoiceOption[] = [
   {
@@ -35,6 +35,54 @@ export const AVAILABLE_VOICES: VoiceOption[] = [
     gender: 'Female',
     description: 'Soft, gentle, and melodic.',
     color: 'bg-teal-500'
+  }
+];
+
+export const SUPPORTED_LANGUAGES: LanguageGroup[] = [
+  {
+    label: "African Languages",
+    options: [
+      { code: "sw", name: "Swahili (Kiswahili)" },
+      { code: "am", name: "Amharic" },
+      { code: "yo", name: "Yoruba" },
+      { code: "ig", name: "Igbo" },
+      { code: "ha", name: "Hausa" },
+      { code: "zu", name: "Zulu (isiZulu)" },
+      { code: "xh", name: "Xhosa (isiXhosa)" },
+      { code: "so", name: "Somali" },
+      { code: "sn", name: "Shona" },
+      { code: "af", name: "Afrikaans" }
+    ]
+  },
+  {
+    label: "Asian Languages",
+    options: [
+      { code: "ja", name: "Japanese" },
+      { code: "zh", name: "Chinese (Mandarin)" },
+      { code: "ko", name: "Korean" },
+      { code: "hi", name: "Hindi" },
+      { code: "ar", name: "Arabic" },
+      { code: "bn", name: "Bengali" },
+      { code: "id", name: "Indonesian" },
+      { code: "vi", name: "Vietnamese" },
+      { code: "th", name: "Thai" },
+      { code: "tr", name: "Turkish" }
+    ]
+  },
+  {
+    label: "European & Global",
+    options: [
+      { code: "en", name: "English" },
+      { code: "fr", name: "French" },
+      { code: "es", name: "Spanish" },
+      { code: "de", name: "German" },
+      { code: "it", name: "Italian" },
+      { code: "pt", name: "Portuguese" },
+      { code: "ru", name: "Russian" },
+      { code: "nl", name: "Dutch" },
+      { code: "pl", name: "Polish" },
+      { code: "uk", name: "Ukrainian" }
+    ]
   }
 ];
 

@@ -3,6 +3,7 @@ import { Bot, Sparkles, AlertCircle, Volume2, Mic2, Fingerprint } from 'lucide-r
 import VoiceSelector from './components/VoiceSelector';
 import VoiceCloner from './components/VoiceCloner';
 import HistoryItem from './components/HistoryItem';
+import LanguageSelector from './components/LanguageSelector';
 import { AVAILABLE_VOICES, SAMPLE_PROMPTS } from './constants';
 import { GeneratedAudio, TtsStatus, CustomVoice } from './types';
 import { generateSpeech } from './services/geminiService';
@@ -13,6 +14,7 @@ const App: React.FC = () => {
 
   // State
   const [text, setText] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState('auto');
   
   // Voice Selection State
   const [selectedPrebuiltId, setSelectedPrebuiltId] = useState(AVAILABLE_VOICES[0].id);
@@ -63,23 +65,19 @@ const App: React.FC = () => {
         displayVoiceName = AVAILABLE_VOICES.find(v => v.id === selectedPrebuiltId)?.name || selectedPrebuiltId;
       } else {
         // Voice Cloning Simulation Logic
-        // Since the public API doesn't support real-time arbitrary voice cloning yet,
-        // we simulate the experience by mapping the custom voice to a high-quality existing voice
-        // or effectively "fallback" while preserving the UI illusion for the demo.
-        // In a real production app with Enterprise access, this would send the 'voice.previewBlob' to a training endpoint.
         const customVoice = customVoices.find(v => v.id === selectedCustomId);
         if (customVoice) {
-          // For variety, we could hash the ID to pick a consistent backing voice, 
-          // but for quality, we'll default to a neutral, high-quality one like 'Charon' or 'Kore'.
-          // Let's toggle based on random property or just pick 'Fenrir' for a distinct "processed" feel.
           apiVoiceName = 'Charon'; 
           displayVoiceName = customVoice.name;
           isCloned = true;
         }
       }
 
+      // Pass selected language name (if not auto)
+      const languageParam = selectedLanguage !== 'auto' ? selectedLanguage : undefined;
+
       // Use the actual service
-      const { blob } = await generateSpeech(text, apiVoiceName);
+      const { blob } = await generateSpeech(text, apiVoiceName, languageParam);
       
       const newItem: GeneratedAudio = {
         id: crypto.randomUUID(),
@@ -87,7 +85,8 @@ const App: React.FC = () => {
         voiceName: displayVoiceName,
         timestamp: Date.now(),
         audioBlob: blob,
-        isCloned
+        isCloned,
+        language: languageParam || 'Auto'
       };
 
       setHistory(prev => [newItem, ...prev]);
@@ -176,22 +175,26 @@ const App: React.FC = () => {
                     />
                     <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-200 flex gap-2">
                        <AlertCircle size={16} className="shrink-0" />
-                       <p>Note: This is a simulation for the demo interface. Real-time voice cloning requires specific enterprise endpoint configuration. The output will map to a high-fidelity proxy voice.</p>
+                       <p>Note: This is a simulation for the demo interface. Real-time voice cloning requires specific enterprise endpoint configuration.</p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* 2. Text Input */}
+            {/* 2. Text Input & Language */}
             <section className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-2xl p-6">
-               <div className="flex justify-between items-center mb-4">
+               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                   <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
                     <Sparkles className="text-amber-400" />
                     Input Text
                   </h2>
-                  <div className="text-xs font-mono text-slate-500">
-                    {charCount} chars | {wordCount} words
+                  <div className="w-full sm:w-64">
+                    <LanguageSelector 
+                      selectedLanguage={selectedLanguage}
+                      onSelect={setSelectedLanguage}
+                      disabled={isGenerating}
+                    />
                   </div>
                </div>
 
@@ -204,19 +207,22 @@ const App: React.FC = () => {
                     disabled={isGenerating}
                  />
                  
-                 {/* Sample Prompts (Quick fill) */}
-                 <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="text-xs text-slate-500 py-1">Try a sample:</span>
-                    {SAMPLE_PROMPTS.map((prompt, i) => (
-                      <button 
-                        key={i}
-                        onClick={() => handleSelectSample(prompt)}
-                        className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded-full transition-colors border border-slate-700"
-                        disabled={isGenerating}
-                      >
-                        {prompt.slice(0, 20)}...
-                      </button>
-                    ))}
+                 <div className="mt-2 flex justify-between items-center text-xs text-slate-500">
+                    <div>
+                      Try a sample: 
+                      {SAMPLE_PROMPTS.slice(0, 2).map((prompt, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => handleSelectSample(prompt)}
+                          className="ml-2 hover:text-indigo-400 underline decoration-dotted underline-offset-2 transition-colors"
+                        >
+                          Sample {i+1}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="font-mono">
+                      {charCount} chars | {wordCount} words
+                    </div>
                  </div>
                </div>
 

@@ -21,6 +21,17 @@ export interface GeneratedAudio {
   audioBlob: Blob; // The WAV/PCM blob ready to play
   duration?: number;
   isCloned?: boolean;
+  language?: string;
+}
+
+export interface LanguageOption {
+  code: string;
+  name: string;
+}
+
+export interface LanguageGroup {
+  label: string;
+  options: LanguageOption[];
 }
 
 export enum TtsStatus {

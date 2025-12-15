@@ -15,12 +15,19 @@ const getAI = () => {
 
 export async function generateSpeech(
   text: string,
-  voiceName: string
+  voiceName: string,
+  languageName?: string
 ): Promise<{ blob: Blob; audioBuffer: AudioBuffer }> {
   const ai = getAI();
   
   // Gemini 2.5 Flash TTS model
   const model = "gemini-2.5-flash-preview-tts";
+
+  // If a specific language is selected, we instruct the model via system instruction
+  // to ensure correct pronunciation and intonation.
+  const systemInstruction = languageName && languageName !== 'Auto Detect'
+    ? `You are a text-to-speech model. Generate the audio in ${languageName}.`
+    : undefined;
 
   try {
     const response = await ai.models.generateContent({
@@ -28,6 +35,7 @@ export async function generateSpeech(
       contents: [{ parts: [{ text: text }] }],
       config: {
         responseModalities: [Modality.AUDIO],
+        systemInstruction: systemInstruction,
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: { voiceName: voiceName },
@@ -46,8 +54,6 @@ export async function generateSpeech(
     const pcmData = decodeBase64(base64Audio);
 
     // Create AudioContext to decode into buffer
-    // Note: We create a temporary context just for decoding to ensure we get a buffer
-    // In a real app, we might share a context, but this is safer for pure data processing.
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
       sampleRate: 24000 // Gemini TTS usually returns 24kHz
     });
