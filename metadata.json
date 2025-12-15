@@ -1,0 +1,7 @@
+{
+  "name": "VocalForge AI",
+  "description": "Generate ultra-realistic human speech using Google's Gemini 2.5 Flash TTS technology. Select from premium voices and bring your text to life.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
