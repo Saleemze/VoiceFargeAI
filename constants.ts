@@ -2,39 +2,60 @@ import { VoiceOption, LanguageGroup } from './types';
 
 export const AVAILABLE_VOICES: VoiceOption[] = [
   {
+    id: 'Kore',
+    name: 'Kore',
+    gender: 'Female',
+    description: 'Warm, nurturing, and deeply natural. Perfect for storytelling and meditation.',
+    color: 'bg-rose-500'
+  },
+  {
+    id: 'Zephyr',
+    name: 'Zephyr',
+    gender: 'Female',
+    description: 'Soft, airy, and melodic. Ideal for poetry or gentle announcements.',
+    color: 'bg-teal-500'
+  },
+  {
+    id: 'Aoede',
+    name: 'Aoede',
+    gender: 'Female',
+    description: 'Sophisticated, clear, and professional. The voice of a modern assistant.',
+    color: 'bg-purple-500'
+  },
+  {
+    id: 'Eos',
+    name: 'Eos',
+    gender: 'Female',
+    description: 'Bright, energetic, and optimistic. Full of life and early morning clarity.',
+    color: 'bg-amber-500'
+  },
+  {
     id: 'Puck',
     name: 'Puck',
     gender: 'Male',
-    description: 'Deep, resonant, and authoritative.',
+    description: 'Deep, resonant, and authoritative. A voice that commands attention.',
     color: 'bg-blue-500'
   },
   {
     id: 'Charon',
     name: 'Charon',
     gender: 'Male',
-    description: 'Calm, steady, and trustworthy.',
+    description: 'Steady, reliable, and trustworthy. Ideal for long-form narration.',
     color: 'bg-indigo-500'
   },
   {
-    id: 'Kore',
-    name: 'Kore',
-    gender: 'Female',
-    description: 'Warm, soothing, and natural.',
-    color: 'bg-rose-500'
+    id: 'Orpheus',
+    name: 'Orpheus',
+    gender: 'Male',
+    description: 'Poetic, expressive, and soulful. A classic narrator with emotional depth.',
+    color: 'bg-emerald-500'
   },
   {
     id: 'Fenrir',
     name: 'Fenrir',
     gender: 'Male',
-    description: 'Energetic, fast-paced, and intense.',
+    description: 'Grit, intensity, and speed. Perfect for action-packed promos.',
     color: 'bg-orange-500'
-  },
-  {
-    id: 'Zephyr',
-    name: 'Zephyr',
-    gender: 'Female',
-    description: 'Soft, gentle, and melodic.',
-    color: 'bg-teal-500'
   }
 ];
 
