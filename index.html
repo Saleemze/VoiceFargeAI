@@ -39,8 +39,12 @@
   }
 }
 </script>
+<!-- Load Babel for in-browser JSX and TypeScript transformation -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
   <body>
     <div id="root"></div>
+    <!-- Mount the React application using Babel -->
+    <script type="text/babel" data-presets="react,typescript" data-type="module" src="index.tsx"></script>
   </body>
 </html>
