@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Sparkles, AlertCircle, Volume2, Mic2, Fingerprint, History, Trash2 } from 'lucide-react';
-import VoiceSelector from './components/VoiceSelector';
-import VoiceCloner from './components/VoiceCloner';
-import LanguageSelector from './components/LanguageSelector';
-import HistoryItem from './components/HistoryItem';
-import { AVAILABLE_VOICES, SAMPLE_PROMPTS } from './constants';
-import { TtsStatus, CustomVoice, GeneratedAudio } from './types';
-import { generateSpeech } from './services/geminiService';
+import VoiceSelector from './components/VoiceSelector.tsx';
+import VoiceCloner from './components/VoiceCloner.tsx';
+import LanguageSelector from './components/LanguageSelector.tsx';
+import HistoryItem from './components/HistoryItem.tsx';
+import { AVAILABLE_VOICES, SAMPLE_PROMPTS } from './constants.ts';
+import { TtsStatus, CustomVoice, GeneratedAudio } from './types.ts';
+import { generateSpeech } from './services/geminiService.ts';
 
 const STORAGE_KEY = 'vocalforge_persistent_history_v2';
 
