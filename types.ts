@@ -1,3 +1,4 @@
+
 export interface VoiceOption {
   id: string;
   name: string;
@@ -11,17 +12,6 @@ export interface CustomVoice {
   name: string;
   previewBlob: Blob;
   createdAt: number;
-}
-
-export interface GeneratedAudio {
-  id: string;
-  text: string;
-  voiceName: string;
-  timestamp: number;
-  audioBlob: Blob; // The WAV/PCM blob ready to play
-  duration?: number;
-  isCloned?: boolean;
-  language?: string;
 }
 
 export interface LanguageOption {
@@ -43,4 +33,15 @@ export enum TtsStatus {
 
 export interface SpeakerConfig {
   voiceName: string;
+}
+
+// Added GeneratedAudio interface used by the HistoryItem component
+export interface GeneratedAudio {
+  id: string;
+  text: string;
+  voiceName: string;
+  audioBlob: Blob;
+  createdAt: number;
+  isCloned?: boolean;
+  language?: string;
 }
