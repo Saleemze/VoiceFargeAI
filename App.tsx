@@ -8,7 +8,7 @@ import { AVAILABLE_VOICES, SAMPLE_PROMPTS } from './constants';
 import { TtsStatus, CustomVoice, GeneratedAudio } from './types';
 import { generateSpeech } from './services/geminiService';
 
-const STORAGE_KEY = 'vocalforge_history_v1';
+const STORAGE_KEY = 'vocalforge_persistent_history_v2';
 
 const App: React.FC = () => {
   // Tabs
@@ -32,30 +32,51 @@ const App: React.FC = () => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load history from localStorage on mount
+  // Recovery Logic: Load from LocalStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Note: Blobs aren't directly serializable to JSON, 
-        // In a real app we'd store the actual audio data, 
-        // but for this UI session-persistence, we'll focus on the session data.
-        // For the purpose of "recovering datas", we'll track the metadata.
-        setHistory(parsed);
+    const loadData = async () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          
+          // Reconstruct Blobs from Base64 strings
+          const restoredHistory = await Promise.all(parsed.map(async (item: any) => {
+            if (item.audioBase64) {
+              const res = await fetch(item.audioBase64);
+              const blob = await res.blob();
+              return { ...item, audioBlob: blob };
+            }
+            return item;
+          }));
+          
+          setHistory(restoredHistory);
+        }
+      } catch (e) {
+        console.error("Data recovery failed:", e);
       }
-    } catch (e) {
-      console.error("Failed to load history", e);
-    }
+    };
+    loadData();
   }, []);
 
-  // Save history to localStorage when it changes
-  useEffect(() => {
-    // Only save serializable parts (excluding actual Blobs for standard JSON storage)
-    // In a production environment with persistent files, we'd use IndexedDB.
-    const serializable = history.map(({ audioBlob, ...rest }) => rest);
-    // Note: We'll keep the history state in memory for the Blobs to work.
-  }, [history]);
+  // Handler to persist history
+  const persistHistory = async (newHistory: GeneratedAudio[]) => {
+    try {
+      const serializable = await Promise.all(newHistory.map(async (item) => {
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(item.audioBlob);
+        });
+        const base64 = await base64Promise;
+        const { audioBlob, ...rest } = item;
+        return { ...rest, audioBase64: base64 };
+      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+    } catch (e) {
+      console.warn("Storage quota might be full, skipping persistence", e);
+    }
+  };
 
   // Derived state
   const isGenerating = status === TtsStatus.GENERATING;
@@ -74,20 +95,21 @@ const App: React.FC = () => {
   };
 
   const handleClearHistory = () => {
-    if (window.confirm("Are you sure you want to clear all generation history?")) {
+    if (window.confirm("Permanently delete all generation history?")) {
       setHistory([]);
       localStorage.removeItem(STORAGE_KEY);
     }
   };
 
   const handleDeleteHistoryItem = (id: string) => {
-    setHistory(prev => prev.filter(item => item.id !== id));
+    const updated = history.filter(item => item.id !== id);
+    setHistory(updated);
+    persistHistory(updated);
   };
 
   const handleGenerate = async () => {
     if (!text.trim()) return;
     
-    // Validation
     if (activeTab === 'cloning' && !selectedCustomId) {
        setError("Please select or create a custom voice first.");
        return;
@@ -113,7 +135,6 @@ const App: React.FC = () => {
       }
 
       const languageParam = selectedLanguage !== 'auto' ? selectedLanguage : undefined;
-
       const { blob } = await generateSpeech(text, apiVoiceName, languageParam);
       
       const newEntry: GeneratedAudio = {
@@ -126,7 +147,9 @@ const App: React.FC = () => {
         language: selectedLanguage === 'auto' ? 'Auto' : selectedLanguage
       };
 
-      setHistory(prev => [newEntry, ...prev]);
+      const newHistory = [newEntry, ...history];
+      setHistory(newHistory);
+      persistHistory(newHistory);
       
       const url = URL.createObjectURL(blob);
       if (audioRef.current) {
@@ -140,7 +163,7 @@ const App: React.FC = () => {
     } catch (err: any) {
       console.error(err);
       setStatus(TtsStatus.ERROR);
-      setError(err.message || "Failed to generate speech. Check API Key or try again.");
+      setError(err.message || "Synthesis failed. Please verify your API Key in Netlify settings.");
     }
   };
 
@@ -152,15 +175,12 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#0f172a] text-slate-200 selection:bg-indigo-500/30">
       <audio ref={audioRef} className="hidden" onEnded={() => setStatus(TtsStatus.IDLE)} />
       
-      {/* Background Ambience */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]" />
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
-        
-        {/* Header */}
         <header className="mb-12 flex flex-col items-center text-center">
           <div className="inline-flex items-center justify-center p-3 bg-indigo-500/10 rounded-2xl mb-4 ring-1 ring-indigo-500/30 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
             <Bot size={32} className="text-indigo-400 mr-2" />
@@ -176,13 +196,8 @@ const App: React.FC = () => {
           </p>
         </header>
 
-        {/* Dashboard Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Main Controls - Left Side (8/12) */}
           <div className="lg:col-span-8 space-y-8">
-            
-            {/* 1. Voice Source Selection (Prebuilt or Cloned) */}
             <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
               <div className="flex border-b border-slate-800">
                  <button
@@ -221,7 +236,6 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* 2. Text Input Area */}
             <section className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-3xl p-8 shadow-2xl">
                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                   <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
@@ -265,7 +279,6 @@ const App: React.FC = () => {
                  </div>
                </div>
 
-               {/* Error Notification */}
                {error && (
                  <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-400 animate-in fade-in slide-in-from-top-2">
                    <AlertCircle size={20} />
@@ -273,7 +286,6 @@ const App: React.FC = () => {
                  </div>
                )}
 
-               {/* Generate Action */}
                <div className="mt-8 flex justify-end">
                  <button
                     onClick={handleGenerate}
@@ -304,13 +316,12 @@ const App: React.FC = () => {
             </section>
           </div>
 
-          {/* Sidebar - Right Side (4/12) */}
           <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-8 h-fit">
             <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col h-[calc(100vh-8rem)]">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="flex items-center gap-2 font-bold text-white text-lg">
                   <History size={20} className="text-indigo-400" />
-                  Generation History
+                  Studio History
                 </h3>
                 {history.length > 0 && (
                    <button 
@@ -329,7 +340,7 @@ const App: React.FC = () => {
                     <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-3 opacity-20">
                       <Volume2 size={24} />
                     </div>
-                    <p className="text-slate-500 text-sm">No audio generated in this session yet.</p>
+                    <p className="text-slate-500 text-sm">No recent generations found.</p>
                   </div>
                 ) : (
                   history.map((item) => (
@@ -344,7 +355,7 @@ const App: React.FC = () => {
 
               <div className="mt-6 pt-6 border-t border-slate-800 text-center">
                  <p className="text-[10px] text-slate-600 uppercase tracking-widest font-bold">
-                   {history.length} Files Ready
+                   {history.length} Assets Persistent
                  </p>
               </div>
             </div>
