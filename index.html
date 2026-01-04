@@ -24,9 +24,12 @@
       /**
        * Netlify Environment Shim
        * This ensures that process.env.API_KEY is accessible to the transpiled code.
+       * IMPORTANT: Add API_KEY to your Netlify "Site configuration > Environment variables".
        */
       window.process = window.process || { env: {} };
       window.process.env = window.process.env || {};
+      
+      // The API_KEY will be available globally if injected by the environment.
     </script>
     <script type="importmap">
     {
