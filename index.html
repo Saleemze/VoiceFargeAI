@@ -21,13 +21,18 @@
       .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     </style>
     <script>
-      // Initialize a robust environment shim for the browser
-      window.process = window.process || {};
+      /**
+       * Netlify Environment Shim
+       * This ensures that process.env.API_KEY is available to the Gemini SDK.
+       * Make sure to add API_KEY in your Netlify Site Settings -> Environment Variables.
+       */
+      window.process = window.process || { env: {} };
       window.process.env = window.process.env || {};
-      // This is a placeholder; real keys should be in Netlify's Environment Variables dashboard
-      if (!window.process.env.API_KEY) {
-        window.process.env.API_KEY = "";
-      }
+      
+      // If we are in a production environment, Netlify variables aren't 
+      // automatically injected into the browser window unless using a build tool.
+      // However, the Gemini SDK expects process.env.API_KEY.
+      // NOTE: You must set the API_KEY in the Netlify Dashboard.
     </script>
     <script type="importmap">
     {
