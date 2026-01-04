@@ -25,7 +25,8 @@ export async function generateSpeech(
   languageName?: string,
   audioReference?: Blob
 ): Promise<{ blob: Blob; audioBuffer: AudioBuffer }> {
-  const apiKey = process.env.API_KEY || (window as any).process?.env?.API_KEY;
+  // Use the environment variable injected by Netlify
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
     throw new Error("Gemini API Key is missing. Please set API_KEY in your Netlify Environment Variables.");
   }
@@ -33,10 +34,6 @@ export async function generateSpeech(
   const ai = new GoogleGenAI({ apiKey });
 
   try {
-    // The model 'gemini-2.5-flash-preview-tts' is specialized for speech generation.
-    // For "cloning", we attempt to pass the reference audio as part of the multimodal prompt.
-    // Note: True zero-shot cloning is most effective in the Live API, but we provide a 
-    // high-quality approximation here by combining the sample with the TTS instructions.
     const model = "gemini-2.5-flash-preview-tts";
     
     let contents: any;
@@ -65,7 +62,6 @@ export async function generateSpeech(
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            // We use the requested voice name (e.g., 'Puck', 'Charon') as the base profile
             prebuiltVoiceConfig: { voiceName: voiceName },
           },
         },
@@ -77,10 +73,7 @@ export async function generateSpeech(
   } catch (error: any) {
     console.error("Gemini TTS Error:", error);
     if (error.message?.includes("404") || error.status === 404) {
-      throw new Error("Model not found. Please ensure you are using a supported region and the correct API key.");
-    }
-    if (error.message?.includes("500") || error.status === 500) {
-      throw new Error("The AI service is temporarily unavailable. Try again in a moment.");
+      throw new Error("Model not found. Please ensure you are using a supported region and have set up your API key in Netlify.");
     }
     throw error;
   }
@@ -90,7 +83,7 @@ async function processAudioResponse(response: any) {
   const base64Audio = response.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
 
   if (!base64Audio) {
-    throw new Error("No audio data returned. The model might have filtered the content or the request was invalid.");
+    throw new Error("No audio data returned.");
   }
 
   const pcmData = decodeBase64(base64Audio);

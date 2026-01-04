@@ -23,16 +23,10 @@
     <script>
       /**
        * Netlify Environment Shim
-       * This ensures that process.env.API_KEY is available to the Gemini SDK.
-       * Make sure to add API_KEY in your Netlify Site Settings -> Environment Variables.
+       * This ensures that process.env.API_KEY is accessible to the transpiled code.
        */
       window.process = window.process || { env: {} };
       window.process.env = window.process.env || {};
-      
-      // If we are in a production environment, Netlify variables aren't 
-      // automatically injected into the browser window unless using a build tool.
-      // However, the Gemini SDK expects process.env.API_KEY.
-      // NOTE: You must set the API_KEY in the Netlify Dashboard.
     </script>
     <script type="importmap">
     {
@@ -45,6 +39,7 @@
       }
     }
     </script>
+    <!-- Babel Standalone for on-the-fly TSX transpilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   </head>
   <body>
